@@ -26,19 +26,19 @@ async function analyzeDomain(domain) {
     }
 
     // Content check
-    const $ = cheerio.load(response.data);
-    const text = $('body').text().replace(/\s+/g, ' ').trim();
-    const wordCount = text.split(' ').filter(w => w.length > 0).length;
+   const $ = cheerio.load(response.data);
+$('script, style, noscript').remove(); // remove non-visible content
+const text = $('body').text().replace(/\s+/g, ' ').trim();
+const wordCount = text.split(' ').filter(w => w.length > 0).length;
 
-    result.notes = `WC: ${wordCount}, SSL: ✅, HTTP: ${response.status}`;
+result.notes = `WC: ${wordCount}, SSL: ✅, HTTP: ${response.status}`;
 
-    if (wordCount < 20) result.remark = 'No Content';
-    if (POLITICAL_DOMAINS.includes(domain)) result.remark = 'Political Campaign Site';
-
-  } catch (err) {
+// Improved: stricter No Content threshold
+const NO_CONTENT_THRESHOLD = 200;
+if (wordCount < NO_CONTENT_THRESHOLD) {
     result.status = 'Invalid';
-    result.remark = 'Website not reachable';
-  }
+    result.remark = 'No Content';
+}
 
   return result;
 }
