@@ -17,21 +17,21 @@ export async function analyzeDomain(domain) {
 
         const html = response.data.toString().toLowerCase();
 
-        // Check for Coming Soon
-        const comingSoonPatterns = [/coming soon/i, /under construction/i, /launching soon/i];
+        // 1. Check for Coming Soon/Placeholder
+        const comingSoonPatterns = [/coming soon/i, /under construction/i, /launching soon/i, /domain for sale/i];
         if (comingSoonPatterns.some(p => p.test(html))) {
-            return { ...result, status: 'COMING_SOON', remark: 'COMING_SOON', notes: 'Placeholder page' };
+            return { ...result, status: 'COMING_SOON', remark: 'COMING_SOON', notes: 'Placeholder or For Sale' };
         }
 
-        // Check for Content Substance
+        // 2. Check for Substance (Word Count)
         const words = html.replace(/<[^>]*>?/gm, ' ').split(/\s+/).filter(w => w.length > 1);
-        if (words.length < 50) {
-            return { ...result, status: 'NO_CONTENT', remark: 'NO_CONTENT', notes: 'Thin content' };
+        if (words.length < 60) {
+            return { ...result, status: 'NO_CONTENT', remark: 'NO_CONTENT', notes: `Thin content (${words.length} words)` };
         }
 
         return { ...result, status: 'ACTIVE', remark: 'ACTIVE', notes: 'Valid site with content' };
 
     } catch (error) {
-        return { ...result, status: 'DOWN', remark: 'DOWN', notes: 'Connection failed' };
+        return { ...result, status: 'DOWN', remark: 'DOWN', notes: 'Connection failed/Timeout' };
     }
 }
