@@ -2,26 +2,24 @@
 <html>
 <head>
     <title>Website Intelligence Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Domain Analyzer</h1>
-    <textarea id="domains" placeholder="Enter domains (one per line)"></textarea>
-    <button onclick="runAnalysis()">Analyze</button>
-    <pre id="output"></pre>
-
-    <script>
-        async function runAnalysis() {
-            const text = document.getElementById('domains').value;
-            const domains = text.split('\n').filter(d => d.trim() !== '');
-            
-            const response = await fetch('/api/analyze/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ domains })
-            });
-            const data = await response.json();
-            document.getElementById('output').innerText = JSON.stringify(data, null, 2);
-        }
-    </script>
+    <textarea id="domainInput" placeholder="Enter domains (one per line)"></textarea>
+    <div class="actions">
+        <button id="analyzeBtn">Analyze</button>
+        <button id="exportBtn">Export Excel</button>
+    </div>
+    <canvas id="statusChart"></canvas>
+    <table id="resultsTable">
+        <thead>
+            <tr><th>Domain</th><th>Status</th><th>Remark</th><th>Notes</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script src="script.js"></script>
 </body>
 </html>
