@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Website Intelligence Tool</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -8,15 +9,25 @@
 </head>
 <body>
     <h1>Domain Analyzer</h1>
-    <textarea id="domainInput" placeholder="Enter domains (one per line)"></textarea>
+    <textarea id="domainInput" placeholder="Enter domains (one per line)..."></textarea>
     <div class="actions">
-        <button id="analyzeBtn">Analyze</button>
-        <button id="exportBtn">Export Excel</button>
+        <button id="analyzeBtn">Analyze All</button>
+        <button id="exportBtn">Export to Excel</button>
     </div>
-    <canvas id="statusChart"></canvas>
+    
+    <div class="chart-container">
+        <canvas id="statusChart"></canvas>
+    </div>
+
     <table id="resultsTable">
         <thead>
-            <tr><th>Domain</th><th>Status</th><th>Remark</th><th>Notes</th></tr>
+            <tr>
+                <th>Domain</th>
+                <th>Status</th>
+                <th>Remark</th>
+                <th>AI Notes</th>
+                <th>Manual Insights</th>
+            </tr>
         </thead>
         <tbody></tbody>
     </table>
