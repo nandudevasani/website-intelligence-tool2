@@ -1,0 +1,16 @@
+{
+  "name": "website-intelligence-tool",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
