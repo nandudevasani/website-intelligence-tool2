@@ -7,25 +7,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware to handle JSON data and serve your HTML/CSS files
 app.use(express.json());
-app.use(express.static(__dirname)); 
+app.use(express.static(path.join(__dirname, 'public')));
 
-// === THE BULK ANALYSIS ROUTE ===
+// API Route - Matches the frontend fetch URL
 app.post('/api/analyze/bulk', async (req, res) => {
-    const { domains } = req.body; // This is the "Stack" of domains from the user
+    const { domains } = req.body;
     
     if (!domains || !Array.isArray(domains)) {
         return res.status(400).json({ error: 'Please provide an array of domains.' });
     }
 
-    console.log(`Starting analysis for ${domains.length} domains...`);
-
     const results = [];
-
-    // We process the domains one by one to ensure accuracy
     for (const rawDomain of domains) {
         const result = await analyzeDomain(rawDomain.trim());
         results.push(result);
@@ -35,5 +30,5 @@ app.post('/api/analyze/bulk', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running at http://localhost:${PORT}`);
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
