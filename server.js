@@ -14,18 +14,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/api/analyze/bulk', async (req, res) => {
     const { domains } = req.body;
-    if (!domains || !Array.isArray(domains)) {
-        return res.status(400).json({ error: 'Please provide an array of domains.' });
-    }
+    if (!domains || !Array.isArray(domains)) return res.status(400).send('Invalid input');
 
     const results = [];
-    for (const rawDomain of domains) {
-        const result = await analyzeDomain(rawDomain.trim());
-        results.push(result);
+    for (const domain of domains) {
+        results.push(await analyzeDomain(domain.trim()));
     }
     res.json(results);
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 System Live: http://localhost:${PORT}`));
