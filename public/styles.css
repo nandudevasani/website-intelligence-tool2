@@ -1,0 +1,6 @@
+body { font-family: Arial, sans-serif; padding: 20px; }
+textarea { width: 100%; margin-bottom: 10px; }
+button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th { background: #f4f4f4; }
