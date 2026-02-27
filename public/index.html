@@ -1,33 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Website Intelligence Tool</title>
+    <title>Domain Intelligence Tool</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Domain Analyzer</h1>
-    <textarea id="domainInput" placeholder="Enter domains (one per line)..."></textarea>
-    <div class="actions">
-        <button id="analyzeBtn">Analyze All</button>
-        <button id="exportBtn">Export to Excel</button>
+    <textarea id="domainInput" placeholder="Enter domains..."></textarea>
+    <div class="btns">
+        <button id="analyzeBtn" style="background:#007bff; color:white;">Run Analysis</button>
+        <button id="exportBtn" style="background:#28a745; color:white;">Export Excel</button>
     </div>
-    
-    <div class="chart-container">
-        <canvas id="statusChart"></canvas>
-    </div>
-
     <table id="resultsTable">
         <thead>
-            <tr>
-                <th>Domain</th>
-                <th>Status</th>
-                <th>Remark</th>
-                <th>AI Notes</th>
-                <th>Manual Insights</th>
-            </tr>
+            <tr><th>Domain</th><th>Status</th><th>Remark</th><th>AI Decode</th><th>Manual Notes</th></tr>
         </thead>
         <tbody></tbody>
     </table>
