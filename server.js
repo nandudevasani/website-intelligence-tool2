@@ -12,10 +12,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Route - Matches the frontend fetch URL
 app.post('/api/analyze/bulk', async (req, res) => {
     const { domains } = req.body;
-    
     if (!domains || !Array.isArray(domains)) {
         return res.status(400).json({ error: 'Please provide an array of domains.' });
     }
@@ -25,7 +23,6 @@ app.post('/api/analyze/bulk', async (req, res) => {
         const result = await analyzeDomain(rawDomain.trim());
         results.push(result);
     }
-
     res.json(results);
 });
 
