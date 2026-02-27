@@ -5,16 +5,17 @@
 <title>Bulk Website Analysis</title>
 <style>
 body{font-family:Arial,sans-serif;padding:20px;}
+textarea{width:100%;height:150px;margin-top:10px;}
+button{margin-top:10px;margin-right:5px;}
 table{border-collapse:collapse;width:100%;margin-top:20px;}
 th,td{border:1px solid #ccc;padding:6px;}
 th{background:#eee;}
-textarea{width:100%;margin-top:10px;}
-button{margin-top:10px;margin-right:5px;}
 </style>
 </head>
 <body>
 <h2>Bulk Website Analysis</h2>
-<textarea id="domainList" rows="6" placeholder="Enter domains separated by commas"></textarea><br>
+<p>Enter one domain per line:</p>
+<textarea id="domainList" placeholder="example.com"></textarea><br>
 <button onclick="runAnalysis()">Analyze</button>
 <button onclick="exportCSV()">Export CSV</button>
 
@@ -27,10 +28,12 @@ button{margin-top:10px;margin-right:5px;}
 
 <script>
 async function runAnalysis(){
-  const domains=document.getElementById('domainList').value.split(',').map(d=>d.trim()).filter(d=>d);
-  if(domains.length===0) return alert('Enter domains');
+  const domains=document.getElementById('domainList').value.split('\n').map(d=>d.trim()).filter(d=>d);
+  if(domains.length===0){alert('Enter domains');return;}
   const res=await fetch('/api/analyze/bulk',{
-    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domains})
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({domains})
   });
   const data=await res.json();
   const tbody=document.querySelector('#resultsTable tbody');
