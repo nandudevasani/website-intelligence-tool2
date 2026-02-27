@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Website Intelligence Tool</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<h1>Website Intelligence Tool</h1>
+
+<textarea id="domainInput" rows="6" placeholder="Enter domains, one per line"></textarea><br>
+<button id="analyzeBtn">Analyze Domains</button>
+<button id="exportBtn">Export to Excel</button>
+
+<table id="resultsTable">
+  <thead>
+    <tr>
+      <th>Domain</th>
+      <th>Status</th>
+      <th>Remark</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<canvas id="statusChart" width="400" height="150"></canvas>
+<script src="script.js"></script>
+</body>
+</html>
