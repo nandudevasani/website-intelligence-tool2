@@ -3,10 +3,10 @@ import axios from 'axios';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dns from 'dns';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -14,127 +14,117 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- Utility Functions ---
-function normalizeDomain(domain) {
-  let d = domain.trim().toLowerCase();
-  d = d.replace(/^(https?:\/\/)/, '').replace(/\/.*$/, '').replace(/^www\./, '');
-  return d;
+// === UTILITIES ===
+function normalizeDomain(input) {
+  return input.trim().toLowerCase().replace(/^(https?:\/\/)/, '').replace(/\/.*$/, '').replace(/^www\./, '');
 }
 
 function extractRootDomain(url) {
   try {
-    const hostname = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '');
-    const parts = hostname.split('.');
-    if (parts.length >= 2) return parts.slice(-2).join('.');
-    return hostname;
-  } catch {
-    return url;
-  }
+    let host = url.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '');
+    const parts = host.split('.');
+    return parts.length >= 2 ? parts.slice(-2).join('.') : host;
+  } catch { return ''; }
 }
 
-// --- Core Content Analysis ---
-function analyzeHtmlContent(html, domain, finalUrl) {
-  const analysis = { status: 'ACTIVE', remark: '', notes: '' };
-
-  // 1️⃣ Redirect check first
-  if (finalUrl) {
-    const rootInput = extractRootDomain(domain);
-    const rootFinal = extractRootDomain(finalUrl);
-    if (rootInput !== rootFinal) {
-      analysis.status = 'REDIRECTED';
-      analysis.remark = 'REDIRECTED';
-      analysis.notes = 'redirected';
-      return analysis;
-    }
-  }
-
-  // 2️⃣ Political site detection
-  const politicalPatterns = [/vote/i, /elect/i, /campaign/i, /mayor/i, /senate/i, /commissioner/i];
-  if (politicalPatterns.some(p => p.test(domain)) || politicalPatterns.some(p => p.test(html))) {
-    analysis.status = 'POLITICAL_CAMPAIGN';
-    analysis.remark = 'POLITICAL_CAMPAIGN';
-    analysis.notes = 'political site';
-    return analysis;
-  }
-
-  // 3️⃣ Content check
-  let bodyText = html.replace(/<script[\s\S]*?<\/script>/gi, '')
-                     .replace(/<style[\s\S]*?<\/style>/gi, '')
-                     .replace(/<[^>]+>/g, ' ')
-                     .replace(/\s+/g, ' ').trim();
-
-  const words = bodyText.split(/\s+/).filter(w => w.length > 1);
-
-  if (words.length < 30) {
-    analysis.status = 'NO_CONTENT';
-    analysis.remark = 'NO_CONTENT';
-    analysis.notes = 'no content website';
-    return analysis;
-  }
-
-  // Default active/valid
-  analysis.status = 'ACTIVE';
-  analysis.remark = 'ACTIVE';
-  analysis.notes = 'valid content';
-  return analysis;
-}
-
-// --- Single Domain Analysis ---
-async function analyzeDomain(domain) {
-  const normalized = normalizeDomain(domain);
-  let finalUrl = null;
-  let html = '';
-
+async function checkDNS(domain) {
   try {
-    const res = await axios.get(`https://${normalized}`, {
-      timeout: 10000,
-      maxRedirects: 5,
-      validateStatus: () => true,
-      headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
-    finalUrl = res.request?.res?.responseUrl || res.config?.url;
-    html = typeof res.data === 'string' ? res.data : '';
-  } catch (err) {
-    return { domain: normalized, status: 'DOWN', remark: 'DOWN', notes: 'site not reachable' };
-  }
-
-  const analysis = analyzeHtmlContent(html, normalized, finalUrl);
-  return { domain: normalized, ...analysis };
+    const a = await dns.promises.resolve4(domain);
+    return a.length > 0;
+  } catch { return false; }
 }
 
-// --- API Endpoints ---
-// Single domain
+async function fetchHTML(domain) {
+  const urls = [`https://${domain}`, `http://${domain}`];
+  for (const url of urls) {
+    try {
+      const res = await axios.get(url, { timeout: 15000, maxRedirects: 10, validateStatus: () => true });
+      return { html: typeof res.data === 'string' ? res.data : '', finalUrl: res.request?.res?.responseUrl || res.config?.url || url, statusCode: res.status };
+    } catch {}
+  }
+  return { html: '', finalUrl: null, statusCode: null };
+}
+
+function analyzeContent(html) {
+  const text = html.replace(/<script[\s\S]*?<\/script>/gi, '')
+                   .replace(/<style[\s\S]*?<\/style>/gi, '')
+                   .replace(/<[^>]+>/g, ' ')
+                   .replace(/\s+/g, ' ').trim();
+  const words = text.split(/\s+/).filter(w => w.length > 1);
+  return { wordCount: words.length };
+}
+
+// === MAIN ANALYSIS LOGIC ===
+function determineStatus(domain, finalUrl, wordCount, html) {
+  const rootDomain = extractRootDomain(domain);
+  let status = 'ACTIVE', remark = 'ACTIVE', notes = 'valid content';
+
+  // 1️⃣ DOWN / unreachable
+  if (!finalUrl) {
+    status = remark = 'DOWN';
+    notes = 'site not reachable';
+    return { status, remark, notes };
+  }
+
+  // 2️⃣ REDIRECTED
+  const finalRoot = extractRootDomain(finalUrl);
+  if (rootDomain !== finalRoot) {
+    status = remark = 'REDIRECTED';
+    notes = 'redirected';
+    return { status, remark, notes };
+  }
+
+  // 3️⃣ POLITICAL CAMPAIGN
+  const politicalPatterns = [/vote/i, /campaign/i, /elect/i, /ballot/i];
+  if (politicalPatterns.some(p => p.test(html)) || /vote|elect/.test(domain)) {
+    status = remark = 'POLITICAL_CAMPAIGN';
+    notes = 'political site';
+    return { status, remark, notes };
+  }
+
+  // 4️⃣ NO CONTENT
+  if (wordCount < 50) {
+    status = remark = 'NO_CONTENT';
+    notes = 'no content website';
+    return { status, remark, notes };
+  }
+
+  // 5️⃣ Otherwise ACTIVE
+  return { status, remark, notes };
+}
+
+// === SINGLE DOMAIN ANALYSIS ===
 app.post('/api/analyze', async (req, res) => {
-  const { domain } = req.body;
-  if (!domain) return res.status(400).json({ error: 'Domain is required' });
-  const result = await analyzeDomain(domain);
-  res.json(result);
+  const { domain: rawDomain } = req.body;
+  if (!rawDomain) return res.status(400).json({ error: 'Domain is required' });
+
+  const domain = normalizeDomain(rawDomain);
+  const dnsValid = await checkDNS(domain);
+  const { html, finalUrl } = await fetchHTML(domain);
+
+  const wordCount = analyzeContent(html).wordCount;
+  const result = determineStatus(domain, finalUrl && dnsValid ? finalUrl : null, wordCount, html);
+
+  res.json({ domain, ...result });
 });
 
-// Bulk domains (one per line)
+// === BULK ANALYSIS ===
 app.post('/api/analyze/bulk', async (req, res) => {
-  const { domains } = req.body; // string with one domain per line
-  if (!domains) return res.status(400).json({ error: 'Provide domains as string, one per line' });
-
-  const domainList = domains.split('\n').map(d => d.trim()).filter(d => d.length > 0);
-  if (domainList.length === 0) return res.status(400).json({ error: 'No valid domains found' });
+  const { domains } = req.body;
+  if (!domains || !Array.isArray(domains)) return res.status(400).json({ error: 'Provide domains array' });
 
   const results = [];
-  for (const d of domainList) {
-    const r = await analyzeDomain(d);
-    results.push(r);
+  for (const raw of domains) {
+    const domain = normalizeDomain(raw);
+    const dnsValid = await checkDNS(domain);
+    const { html, finalUrl } = await fetchHTML(domain);
+    const wordCount = analyzeContent(html).wordCount;
+    results.push({ domain, ...determineStatus(domain, finalUrl && dnsValid ? finalUrl : null, wordCount, html) });
   }
-
   res.json({ total: results.length, results });
 });
 
-// Health check
+// === HEALTH CHECK ===
 app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`\n=== Website Intelligence Basic ===`);
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`POST /api/analyze  -> single domain`);
-  console.log(`POST /api/analyze/bulk -> bulk domains (one per line)\n`);
-});
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
