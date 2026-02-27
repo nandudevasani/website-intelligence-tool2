@@ -1,6 +1,15 @@
-body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-textarea { width: 100%; height: 150px; margin-bottom: 10px; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; background: #f9f9f9; color: #333; }
+textarea { width: 100%; height: 120px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+.actions { margin: 15px 0; }
+button { padding: 10px 20px; cursor: pointer; border-radius: 5px; border: none; background: #007bff; color: white; font-weight: bold; }
+button:hover { background: #0056b3; }
+#exportBtn { background: #28a745; margin-left: 10px; }
+table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
 th { background: #f4f4f4; }
-canvas { max-height: 300px; margin: 20px 0; }
+.status-active { color: #2e7d32; font-weight: bold; }
+.status-down { color: #c62828; font-weight: bold; }
+.status-coming_soon { color: #f9a825; font-weight: bold; }
+.status-no_content { color: #ef6c00; font-weight: bold; }
+.insight-input { width: 90%; padding: 4px; border: 1px solid #ddd; border-radius: 4px; }
+.chart-container { max-width: 300px; margin: 20px 0; }
