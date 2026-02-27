@@ -27,33 +27,51 @@ th{background:#eee;}
 </table>
 
 <script>
+// Dynamically get backend URL
+const BACKEND_URL = window.location.origin;
+
 async function runAnalysis(){
-  const domains=document.getElementById('domainList').value.split('\n').map(d=>d.trim()).filter(d=>d);
-  if(domains.length===0){alert('Enter domains');return;}
-  const res=await fetch('/api/analyze/bulk',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({domains})
-  });
-  const data=await res.json();
-  const tbody=document.querySelector('#resultsTable tbody');
-  tbody.innerHTML='';
-  data.results.forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${r.domain}</td><td>${r.status}</td><td>${r.remark}</td><td>${r.notes}</td>`;
-    tbody.appendChild(tr);
-  });
+  const domains = document.getElementById('domainList').value
+                    .split('\n')
+                    .map(d => d.trim())
+                    .filter(d => d);
+  if(domains.length === 0){ alert('Enter domains'); return; }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/analyze/bulk`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ domains })
+    });
+
+    if(!res.ok) throw new Error(`Server responded with ${res.status}`);
+
+    const data = await res.json();
+    const tbody = document.querySelector('#resultsTable tbody');
+    tbody.innerHTML = '';
+    data.results.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.domain}</td><td>${r.status}</td><td>${r.remark}</td><td>${r.notes}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch(err) {
+    alert(`Error: ${err.message}`);
+    console.error(err);
+  }
 }
 
 function exportCSV(){
-  const rows=document.querySelectorAll('#resultsTable tr');
-  const csv=[];
-  rows.forEach(r=>{
-    const cols=[...r.cells].map(c=>c.innerText);
+  const rows = document.querySelectorAll('#resultsTable tr');
+  const csv = [];
+  rows.forEach(r => {
+    const cols = [...r.cells].map(c => c.innerText);
     csv.push(cols.join(','));
   });
-  const blob=new Blob([csv.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download='analysis.csv'; link.click();
+  const blob = new Blob([csv.join('\n')], { type:'text/csv;charset=utf-8;' });
+  const link = document.createElement('a'); 
+  link.href = URL.createObjectURL(blob); 
+  link.download = 'analysis.csv'; 
+  link.click();
 }
 </script>
 </body>
